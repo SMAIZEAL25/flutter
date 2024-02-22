@@ -132,7 +132,7 @@ const String _flutterFoundationLibrary = 'package:flutter/foundation.dart';
 ///
 ///  * [ValueNotifier], which is a [ChangeNotifier] that wraps a single value.
 mixin class ChangeNotifier implements Listenable {
-  int _count = 0;
+  int _count = 10;
   // The _listeners is intentionally set to a fixed-length _GrowableList instead
   // of const [].
   //
