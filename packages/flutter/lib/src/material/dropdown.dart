@@ -119,13 +119,10 @@ class _DropdownMenuItemButton<T> extends StatefulWidget {
 
 class _DropdownMenuItemButtonState<T> extends State<_DropdownMenuItemButton<T>> {
   void _handleFocusChange(bool focused) {
-    final bool inTraditionalMode;
-    switch (FocusManager.instance.highlightMode) {
-      case FocusHighlightMode.touch:
-        inTraditionalMode = false;
-      case FocusHighlightMode.traditional:
-        inTraditionalMode = true;
-    }
+    final bool inTraditionalMode = switch (FocusManager.instance.highlightMode) {
+      FocusHighlightMode.touch       => false,
+      FocusHighlightMode.traditional => true,
+    };
 
     if (focused && inTraditionalMode) {
       final _MenuLimits menuLimits = widget.route.getMenuLimits(
@@ -377,13 +374,10 @@ class _DropdownMenuRouteLayout<T> extends SingleChildLayoutDelegate {
       return true;
     }());
     assert(textDirection != null);
-    final double left;
-    switch (textDirection!) {
-      case TextDirection.rtl:
-        left = clampDouble(buttonRect.right, 0.0, size.width) - childSize.width;
-      case TextDirection.ltr:
-        left = clampDouble(buttonRect.left, 0.0, size.width - childSize.width);
-    }
+    final double left = switch (textDirection!) {
+      TextDirection.rtl => clampDouble(buttonRect.right, 0.0, size.width) - childSize.width,
+      TextDirection.ltr => clampDouble(buttonRect.left, 0.0, size.width - childSize.width),
+    };
 
     return Offset(left, menuLimits.top);
   }
@@ -611,7 +605,7 @@ class _DropdownRoutePage<T> extends StatefulWidget {
 }
 
 class _DropdownRoutePageState<T> extends State<_DropdownRoutePage<T>> {
-  late ScrollController _scrollSontroller;
+  late ScrollController _scrollController;
 
   @override
   void initState(){
@@ -624,7 +618,7 @@ class _DropdownRoutePageState<T> extends State<_DropdownRoutePage<T>> {
     // Otherwise the initialScrollOffset is just a rough approximation based on
     // treating the items as if their heights were all equal to kMinInteractiveDimension.
     final _MenuLimits menuLimits = widget.route.getMenuLimits(widget.buttonRect, widget.constraints.maxHeight, widget.selectedIndex);
-    _scrollSontroller = ScrollController(initialScrollOffset: menuLimits.scrollOffset);
+    _scrollController = ScrollController(initialScrollOffset: menuLimits.scrollOffset);
   }
 
 
@@ -641,7 +635,7 @@ class _DropdownRoutePageState<T> extends State<_DropdownRoutePage<T>> {
       dropdownColor: widget.dropdownColor,
       enableFeedback: widget.enableFeedback,
       borderRadius: widget.borderRadius,
-      scrollController: _scrollSontroller,
+      scrollController: _scrollController,
     );
 
     return MediaQuery.removePadding(
@@ -667,7 +661,7 @@ class _DropdownRoutePageState<T> extends State<_DropdownRoutePage<T>> {
 
   @override
   void dispose() {
-    _scrollSontroller.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 }
@@ -1379,28 +1373,17 @@ class _DropdownButtonState<T> extends State<DropdownButton<T>> with WidgetsBindi
 
   Color get _iconColor {
     // These colors are not defined in the Material Design spec.
+    final Brightness brightness = Theme.of(context).brightness;
     if (_enabled) {
-      if (widget.iconEnabledColor != null) {
-        return widget.iconEnabledColor!;
-      }
-
-      switch (Theme.of(context).brightness) {
-        case Brightness.light:
-          return Colors.grey.shade700;
-        case Brightness.dark:
-          return Colors.white70;
-      }
+      return widget.iconEnabledColor ?? switch (brightness) {
+        Brightness.light => Colors.grey.shade700,
+        Brightness.dark  => Colors.white70,
+      };
     } else {
-      if (widget.iconDisabledColor != null) {
-        return widget.iconDisabledColor!;
-      }
-
-      switch (Theme.of(context).brightness) {
-        case Brightness.light:
-          return Colors.grey.shade400;
-        case Brightness.dark:
-          return Colors.white10;
-      }
+      return widget.iconDisabledColor ?? switch (brightness) {
+        Brightness.light => Colors.grey.shade400,
+        Brightness.dark  => Colors.white10,
+      };
     }
   }
 

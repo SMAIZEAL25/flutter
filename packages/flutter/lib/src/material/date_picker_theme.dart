@@ -227,6 +227,11 @@ class DatePickerThemeData with Diagnosticable {
   /// to the [backgroundColor] of a full screen
   /// [DateRangePickerDialog]'s to indicate elevation.
   ///
+  /// This is not recommended for use. [Material 3 spec](https://m3.material.io/styles/color/the-color-system/color-roles)
+  /// introduced a set of tone-based surfaces and surface containers in its [ColorScheme],
+  /// which provide more flexibility. The intention is to eventually remove surface tint color from
+  /// the framework.
+  ///
   /// See also:
   ///   [Material.surfaceTintColor], which explains how this color is related to
   ///   [elevation].
@@ -301,7 +306,7 @@ class DatePickerThemeData with Diagnosticable {
   /// Overrides the default style of the cancel button of a [DatePickerDialog].
   final ButtonStyle? cancelButtonStyle;
 
-  /// Overrrides the default style of the confirm (OK) button of a [DatePickerDialog].
+  /// Overrides the default style of the confirm (OK) button of a [DatePickerDialog].
   final ButtonStyle? confirmButtonStyle;
 
   /// Creates a copy of this object with the given fields replaced with the
@@ -848,7 +853,7 @@ class _DatePickerDefaultsM3 extends DatePickerThemeData {
   late final TextTheme _textTheme = _theme.textTheme;
 
   @override
-  Color? get backgroundColor => _colors.surface;
+  Color? get backgroundColor => _colors.surfaceContainerHigh;
 
   @override
   ButtonStyle get cancelButtonStyle {
@@ -864,7 +869,7 @@ class _DatePickerDefaultsM3 extends DatePickerThemeData {
   Color? get shadowColor => Colors.transparent;
 
   @override
-  Color? get surfaceTintColor => _colors.surfaceTint;
+  Color? get surfaceTintColor => Colors.transparent;
 
   @override
   Color? get headerBackgroundColor => Colors.transparent;
@@ -911,23 +916,23 @@ class _DatePickerDefaultsM3 extends DatePickerThemeData {
     MaterialStateProperty.resolveWith((Set<MaterialState> states) {
       if (states.contains(MaterialState.selected)) {
         if (states.contains(MaterialState.pressed)) {
-          return _colors.onPrimary.withOpacity(0.12);
+          return _colors.onPrimary.withOpacity(0.1);
         }
         if (states.contains(MaterialState.hovered)) {
           return _colors.onPrimary.withOpacity(0.08);
         }
         if (states.contains(MaterialState.focused)) {
-          return _colors.onPrimary.withOpacity(0.12);
+          return _colors.onPrimary.withOpacity(0.1);
         }
       } else {
         if (states.contains(MaterialState.pressed)) {
-          return _colors.onSurfaceVariant.withOpacity(0.12);
+          return _colors.onSurfaceVariant.withOpacity(0.1);
         }
         if (states.contains(MaterialState.hovered)) {
           return _colors.onSurfaceVariant.withOpacity(0.08);
         }
         if (states.contains(MaterialState.focused)) {
-          return _colors.onSurfaceVariant.withOpacity(0.12);
+          return _colors.onSurfaceVariant.withOpacity(0.1);
         }
       }
       return null;
@@ -978,23 +983,23 @@ class _DatePickerDefaultsM3 extends DatePickerThemeData {
     MaterialStateProperty.resolveWith((Set<MaterialState> states) {
       if (states.contains(MaterialState.selected)) {
         if (states.contains(MaterialState.pressed)) {
-          return _colors.onPrimary.withOpacity(0.12);
+          return _colors.onPrimary.withOpacity(0.1);
         }
         if (states.contains(MaterialState.hovered)) {
           return _colors.onPrimary.withOpacity(0.08);
         }
         if (states.contains(MaterialState.focused)) {
-          return _colors.onPrimary.withOpacity(0.12);
+          return _colors.onPrimary.withOpacity(0.1);
         }
       } else {
         if (states.contains(MaterialState.pressed)) {
-          return _colors.onSurfaceVariant.withOpacity(0.12);
+          return _colors.onSurfaceVariant.withOpacity(0.1);
         }
         if (states.contains(MaterialState.hovered)) {
           return _colors.onSurfaceVariant.withOpacity(0.08);
         }
         if (states.contains(MaterialState.focused)) {
-          return _colors.onSurfaceVariant.withOpacity(0.12);
+          return _colors.onSurfaceVariant.withOpacity(0.1);
         }
       }
       return null;
@@ -1013,13 +1018,13 @@ class _DatePickerDefaultsM3 extends DatePickerThemeData {
   MaterialStateProperty<Color?>? get rangeSelectionOverlayColor =>
     MaterialStateProperty.resolveWith((Set<MaterialState> states) {
       if (states.contains(MaterialState.pressed)) {
-        return _colors.onPrimaryContainer.withOpacity(0.12);
+        return _colors.onPrimaryContainer.withOpacity(0.1);
       }
       if (states.contains(MaterialState.hovered)) {
         return _colors.onPrimaryContainer.withOpacity(0.08);
       }
       if (states.contains(MaterialState.focused)) {
-        return _colors.onPrimaryContainer.withOpacity(0.12);
+        return _colors.onPrimaryContainer.withOpacity(0.1);
       }
       return null;
     });

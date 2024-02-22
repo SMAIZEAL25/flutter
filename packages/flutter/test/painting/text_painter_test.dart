@@ -7,6 +7,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:leak_tracker_flutter_testing/leak_tracker_flutter_testing.dart';
 
 void _checkCaretOffsetsLtrAt(String text, List<int> boundaries) {
   expect(boundaries.first, 0);
@@ -1192,9 +1193,9 @@ void main() {
   }, skip: isBrowser && !isCanvasKit); // https://github.com/flutter/flutter/issues/87543
 
   test('TextPainter handles invalid UTF-16', () {
-    Object? exception;
+    FlutterErrorDetails? error;
     FlutterError.onError = (FlutterErrorDetails details) {
-      exception = details.exception;
+      error = details;
     };
 
     final TextPainter painter = TextPainter()
@@ -1206,7 +1207,8 @@ void main() {
     painter.layout();
     // The layout should include one replacement character.
     expect(painter.width, equals(fontSize));
-    expect(exception, isNotNull);
+    expect(error!.exception, isNotNull);
+    expect(error!.silent, isTrue);
     painter.dispose();
   }, skip: kIsWeb); // https://github.com/flutter/flutter/issues/87544
 
@@ -1508,6 +1510,24 @@ void main() {
     painter.dispose();
   });
 
+  test('LongestLine TextPainter properly relayout when maxWidth changes.', () {
+    // Regression test for https://github.com/flutter/flutter/issues/142309.
+    final TextPainter painter = TextPainter()
+      ..textAlign = TextAlign.justify
+      ..textWidthBasis = TextWidthBasis.longestLine
+      ..textDirection = TextDirection.ltr
+      ..text = TextSpan(text: 'A' * 100, style: const TextStyle(fontSize: 10));
+
+    painter.layout(maxWidth: 1000);
+    expect(painter.width, 1000);
+
+    painter.layout(maxWidth: 100);
+    expect(painter.width, 100);
+
+    painter.layout(maxWidth: 1000);
+    expect(painter.width, 1000);
+  });
+
   test('TextPainter line breaking does not round to integers', () {
     const double fontSize = 1.25;
     const String text = '12345';
@@ -1525,6 +1545,13 @@ void main() {
         expect(metrics, hasLength(1));
     }
   }, skip: kIsWeb && !isCanvasKit); // [intended] Browsers seem to always round font/glyph metrics.
+
+  test('TextPainter dispatches memory events', () async {
+    await expectLater(
+      await memoryEvents(() => TextPainter().dispose(), TextPainter),
+      areCreateAndDispose,
+    );
+  });
 }
 
 class MockCanvas extends Fake implements Canvas {

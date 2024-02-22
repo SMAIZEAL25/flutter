@@ -123,8 +123,9 @@ Future<void> precacheImage(
       // image stream.
       // See ImageCache._liveImages
       SchedulerBinding.instance.addPostFrameCallback((Duration timeStamp) {
+        image?.dispose();
         stream.removeListener(listener!);
-      });
+      }, debugLabel: 'precacheImage.removeListener');
     },
     onError: (Object exception, StackTrace? stackTrace) {
       if (!completer.isCompleted) {
@@ -1164,7 +1165,10 @@ class _ImageState extends State<Image> with WidgetsBindingObserver {
 
   void _replaceImage({required ImageInfo? info}) {
     final ImageInfo? oldImageInfo = _imageInfo;
-    SchedulerBinding.instance.addPostFrameCallback((_) => oldImageInfo?.dispose());
+    SchedulerBinding.instance.addPostFrameCallback(
+      (_) => oldImageInfo?.dispose(),
+      debugLabel: 'Image.disposeOldInfo'
+    );
     _imageInfo = info;
   }
 

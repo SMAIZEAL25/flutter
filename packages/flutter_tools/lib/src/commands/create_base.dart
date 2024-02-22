@@ -534,6 +534,7 @@ abstract class CreateBase extends FlutterCommand {
         processManager: globals.processManager,
         platform: globals.platform,
         usage: globals.flutterUsage,
+        analytics: globals.analytics,
         projectDir: project.directory,
         generateDartPluginRegistry: true,
       );
@@ -543,6 +544,7 @@ abstract class CreateBase extends FlutterCommand {
       await generateLocalizationsSyntheticPackage(
         environment: environment,
         buildSystem: globals.buildSystem,
+        buildTargets: globals.buildTargets,
       );
     }
     final List<SupportedPlatform> platformsForMigrateConfig = <SupportedPlatform>[SupportedPlatform.root];

@@ -329,6 +329,14 @@ void main() {
           'snapshots', 'frontend_server_aot.dart.snapshot')
       );
 
+      expect(
+        artifacts.getArtifactPath(
+          Artifact.flutterPreviewDevice,
+          platform: TargetPlatform.windows_x64,
+        ),
+        fileSystem.path.join('root', 'bin', 'cache', 'artifacts',
+          'flutter_preview', 'flutter_preview.exe'),
+      );
 
       fileSystem.file(fileSystem.path.join('/out', 'host_debug_unopt', 'impellerc'))
         .createSync(recursive: true);
@@ -418,13 +426,6 @@ void main() {
           platform: TargetPlatform.web_javascript),
         fileSystem.path.join('/flutter', 'prebuilts', 'linux-x64', 'dart-sdk',
             'bin', 'snapshots', 'dart2js.dart.snapshot'),
-      );
-      expect(
-        artifacts.getArtifactPath(
-          Artifact.wasmOptBinary,
-          platform: TargetPlatform.web_javascript),
-        fileSystem.path.join('/flutter', 'prebuilts', 'linux-x64', 'dart-sdk',
-            'bin', 'utils', 'wasm-opt'),
       );
     });
 

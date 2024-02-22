@@ -920,6 +920,42 @@ void main() {
           orderedEquals(expectedMatchers));
       });
 
+      testWidgets('simulatedAccessibilityTraversal end Index supports empty traversal', (WidgetTester tester) async {
+        await tester.pumpWidget(const MaterialApp(
+          home: Center(
+            child: Column(), // No nodes!
+          ),
+        ));
+        expect(
+          tester.semantics.simulatedAccessibilityTraversal().map((SemanticsNode node) => node.label),
+          <String>[],
+        );
+      });
+
+      testWidgets('starts traversal at semantics node for `startNode`', (WidgetTester tester) async {
+        await tester.pumpWidget(MaterialApp(
+          home: Center(
+            child: Column(
+              children: <Widget>[
+                for (int c = 0; c < 5; c++)
+                  Semantics(container: true, child: Text('Child$c')),
+              ]
+            ),
+          ),
+        ));
+        expect(
+          tester.semantics.simulatedAccessibilityTraversal(
+            startNode: find.semantics.byLabel('Child1'),
+          ).map((SemanticsNode node) => node.label),
+          <String>[
+            'Child1',
+            'Child2',
+            'Child3',
+            'Child4',
+          ],
+        );
+      });
+
       testWidgets('throws StateError if `start` not found in traversal', (WidgetTester tester) async {
         await tester.pumpWidget(const MaterialApp(home: _SemanticsTestWidget()));
 
@@ -927,6 +963,23 @@ void main() {
         // important for accessibility, so it won't show up in the traversal
         expect(
           () => tester.semantics.simulatedAccessibilityTraversal(start: find.byType(SingleChildScrollView)),
+          throwsA(isA<StateError>()),
+        );
+      });
+
+      testWidgets('throws StateError if `startNode` not found in traversal', (WidgetTester tester) async {
+        await tester.pumpWidget(MaterialApp(
+          home: Center(
+            child: Column(
+              children: <Widget>[
+                for (int c = 0; c < 5; c++)
+                  Semantics(container: true, child: Text('Child$c')),
+              ]
+            ),
+          ),
+        ));
+        expect(
+          () => tester.semantics.simulatedAccessibilityTraversal(startNode: find.semantics.byLabel('Child20')),
           throwsA(isA<StateError>()),
         );
       });
@@ -942,6 +995,28 @@ void main() {
           orderedEquals(expectedMatchers));
       });
 
+      testWidgets('ends traversal at semantics node for `endNode`', (WidgetTester tester) async {
+        await tester.pumpWidget(MaterialApp(
+          home: Center(
+            child: Column(
+              children: <Widget>[
+                for (int c = 0; c < 5; c++)
+                  Semantics(container: true, child: Text('Child$c')),
+              ]
+            ),
+          ),
+        ));
+        expect(
+          tester.semantics.simulatedAccessibilityTraversal(
+            endNode: find.semantics.byLabel('Child1'),
+          ).map((SemanticsNode node) => node.label),
+          <String>[
+            'Child0',
+            'Child1',
+          ],
+        );
+      });
+
       testWidgets('throws StateError if `end` not found in traversal', (WidgetTester tester) async {
         await tester.pumpWidget(const MaterialApp(home: _SemanticsTestWidget()));
 
@@ -949,6 +1024,23 @@ void main() {
         // important for semantics, so it won't show up in the traversal
         expect(
           () => tester.semantics.simulatedAccessibilityTraversal(end: find.byType(SingleChildScrollView)),
+          throwsA(isA<StateError>()),
+        );
+      });
+
+      testWidgets('throws StateError if `endNode` not found in traversal', (WidgetTester tester) async {
+        await tester.pumpWidget(MaterialApp(
+          home: Center(
+            child: Column(
+              children: <Widget>[
+                for (int c = 0; c < 5; c++)
+                  Semantics(container: true, child: Text('Child$c')),
+              ]
+            ),
+          ),
+        ));
+        expect(
+          () => tester.semantics.simulatedAccessibilityTraversal(endNode: find.semantics.byLabel('Child20')),
           throwsA(isA<StateError>()),
         );
       });
@@ -965,6 +1057,30 @@ void main() {
             end: find.byType(Slider),
           ),
           orderedEquals(expectedMatchers));
+      });
+
+      testWidgets('returns traversal between `startNode` and `endNode` if both are provided', (WidgetTester tester) async {
+        await tester.pumpWidget(MaterialApp(
+          home: Center(
+            child: Column(
+              children: <Widget>[
+                for (int c = 0; c < 5; c++)
+                  Semantics(container: true, child: Text('Child$c')),
+              ]
+            ),
+          ),
+        ));
+        expect(
+          tester.semantics.simulatedAccessibilityTraversal(
+            startNode: find.semantics.byLabel('Child1'),
+            endNode: find.semantics.byLabel('Child3'),
+          ).map((SemanticsNode node) => node.label),
+          <String>[
+            'Child1',
+            'Child2',
+            'Child3',
+          ],
+        );
       });
 
       testWidgets('can do fuzzy traversal match with `containsAllInOrder`', (WidgetTester tester) async {
@@ -1480,6 +1596,172 @@ void main() {
 
         expect(invoked, isTrue);
       });
+    });
+  });
+
+  group('WidgetTester.tapOnText', () {
+    final List<String > tapLogs = <String>[];
+    final TapGestureRecognizer tapA = TapGestureRecognizer()..onTap = () { tapLogs.add('A'); };
+    final TapGestureRecognizer tapB = TapGestureRecognizer()..onTap = () { tapLogs.add('B'); };
+    final TapGestureRecognizer tapC = TapGestureRecognizer()..onTap = () { tapLogs.add('C'); };
+    tearDown(tapLogs.clear);
+    tearDownAll(() {
+      tapA.dispose();
+      tapB.dispose();
+      tapC.dispose();
+    });
+
+    testWidgets('basic test', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: Text.rich(TextSpan(text: 'match', recognizer: tapA)),
+        ),
+      );
+
+      await tester.tapOnText(find.textRange.ofSubstring('match'));
+      expect(tapLogs, <String>['A']);
+    });
+
+    testWidgets('partially obstructed: find a hit-testable Offset', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: Stack(
+            fit: StackFit.expand,
+            children: <Widget>[
+              Positioned(
+                left: 100.0 - 9 * 10.0,  // Only the last character is visible.
+                child: Text.rich(TextSpan(text: 'text match', style: const TextStyle(fontSize: 10), recognizer: tapA)),
+              ),
+              const Positioned(
+                left: 0.0,
+                right: 100.0,
+                child: MetaData(behavior: HitTestBehavior.opaque),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      await expectLater(
+        () => tester.tapOnText(find.textRange.ofSubstring('text match')),
+        returnsNormally,
+      );
+    });
+
+    testWidgets('multiline text partially obstructed: find a hit-testable Offset', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: Stack(
+            fit: StackFit.expand,
+            children: <Widget>[
+              Positioned(
+                width: 100.0,
+                top: 23.0,
+                left: 0.0,
+                child: Text.rich(
+                  TextSpan(
+                    style: const TextStyle(fontSize: 10),
+                    children: <InlineSpan>[
+                      TextSpan(text: 'AAAAAAAAA ', recognizer: tapA),
+                      TextSpan(text: 'BBBBBBBBB ', recognizer: tapB), // The only visible line
+                      TextSpan(text: 'CCCCCCCCC ', recognizer: tapC),
+                    ]
+                  )
+                ),
+              ),
+              const Positioned(
+                top: 23.0, // Some random offset to test the global to local Offset conversion
+                left: 0.0,
+                right: 0.0,
+                height: 10.0,
+                child: MetaData(behavior: HitTestBehavior.opaque, child: SizedBox.expand()),
+              ),
+              const Positioned(
+                top: 43.0,
+                left: 0.0,
+                right: 0.0,
+                height: 10.0,
+                child: MetaData(behavior: HitTestBehavior.opaque, child: SizedBox.expand()),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      await tester.tapOnText(find.textRange.ofSubstring('AAAAAAAAA BBBBBBBBB CCCCCCCCC '));
+      expect(tapLogs, <String>['B']);
+    });
+
+    testWidgets('error message: no matching text', (WidgetTester tester) async {
+      await tester.pumpWidget(const SizedBox());
+      await expectLater(
+        () => tester.tapOnText(find.textRange.ofSubstring('nonexistent')),
+        throwsA(isFlutterError.having(
+          (FlutterError error) => error.message,
+          'message',
+          contains('Found 0 non-overlapping TextRanges that match the Pattern "nonexistent": []'),
+        )),
+      );
+    });
+
+    testWidgets('error message: too many matches', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: Text.rich(
+            TextSpan(
+              text: 'match',
+              recognizer: tapA,
+              children: <InlineSpan>[TextSpan(text: 'another match', recognizer: tapB)],
+            ),
+          ),
+        ),
+      );
+
+      await expectLater(
+        () => tester.tapOnText(find.textRange.ofSubstring('match')),
+        throwsA(isFlutterError.having(
+          (FlutterError error) => error.message,
+          'message',
+          stringContainsInOrder(<String>[
+            'Found 2 non-overlapping TextRanges that match the Pattern "match"',
+            'TextRange(start: 0, end: 5)',
+            'TextRange(start: 13, end: 18)',
+            'The "tapOnText" method needs a single non-empty TextRange.',
+          ])
+        )),
+      );
+    });
+
+    testWidgets('error message: not hit-testable', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: Stack(
+            fit: StackFit.expand,
+            children: <Widget>[
+              Text.rich(TextSpan(text: 'match', recognizer: tapA)),
+              const MetaData(behavior: HitTestBehavior.opaque),
+            ],
+          ),
+        ),
+      );
+
+      await expectLater(
+        () => tester.tapOnText(find.textRange.ofSubstring('match')),
+        throwsA(isFlutterError.having(
+          (FlutterError error) => error.message,
+          'message',
+          stringContainsInOrder(<String>[
+            'The finder used was: A finder that searches for non-overlapping TextRanges that match the Pattern "match".',
+            'Found a matching substring in a static text widget, within TextRange(start: 0, end: 5).',
+            'But the "tapOnText" method could not find a hit-testable Offset with in that text range.',
+          ])
+        )),
+      );
     });
   });
 }
